@@ -1,10 +1,6 @@
 name: Build and Deploy to AKS
 
-on:
-  push:
-    branches:
-      - main
-
+on: workflow_dispatch
 env:
   ACR_NAME: jayacr1       
   ACR_LOGIN_SERVER: myacrname.azurecr.io
