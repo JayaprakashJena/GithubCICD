@@ -1,0 +1,35 @@
+name: Build and Deploy to AKS
+
+on: workflow_dispatch
+env:
+  ACR_NAME: jayacr1       
+  ACR_LOGIN_SERVER: myacrname.azurecr.io
+  IMAGE_NAME: pythonapp
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Log in to ACR
+      run: az acr login --name $ACR_NAME
+
+    - name: Build and push Docker image
+      run: |
+        docker build -t $ACR_LOGIN_SERVER/$IMAGE_NAME:${{ github.sha }} .
+        docker push $ACR_LOGIN_SERVER/$IMAGE_NAME:${{ github.sha }}
+
+    - name: Set AKS context
+      run: az aks get-credentials --resource-group myResourceGroup --name myAKSCluster
+
+    - name: Deploy to AKS
+      run: |
+        kubectl set image deployment/python-deployment python-container=$ACR_LOGIN_SERVER/$IMAGE_NAME:${{ github.sha }}
